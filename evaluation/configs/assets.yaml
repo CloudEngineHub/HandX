@@ -1,0 +1,12 @@
+FOLDER: './experiments'
+
+TEST:
+  FOLDER: './results'
+
+DATASET:
+  INTERACT:
+    ROOT: ../data/handx
+    SPLIT_ROOT: ./dataset_split
+
+model:
+  bert_path: 'distilbert-base-uncased'

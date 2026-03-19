@@ -1,0 +1,2329 @@
+[Task overview & Goal]:
+
+You are given a JSON file representing a two-hand 3D motion sequence. Your goal is to generate a clear, structured, and concise paragraph summarizing the physical motion of both hands, based on the provided JSON-formatted motion data. Focus strictly on joint states, finger movement, and inter-hand spatial relationships — without interpreting gesture meaning or intent.
+
+[Input Format & Structure Description]:
+
+You are given a JSON file representing a 3D two-hand motion sequence. The structure is composed of three top-level keys:
+
+- frame_count
+- left_hand_events
+- right_hand_events
+- two_hand_relationships
+
+Each section includes multiple events, organized by type. An event is recorded as a list of dictionaries, each representing a meaningful temporal change. Each event dictionary includes:
+
+- start: Start frame index of the event
+- end: End frame index of the event
+- start_des: Description of the state at the start
+- end_des: Description of the state at the end
+- constant_des: Describes a consistently maintained state throughout the interval without significant change
+- v_des: Description of movement speed (e.g., Slow, Medium, Fast)
+- direction: (only present in wrist trajectory) Direction of movement over time
+
+Hand Event Types:
+Under left_hand_events and right_hand_events, the following categories are defined:
+
+1. finger_flexing
+    - Keyed by finger joints (e.g., index_mcp, thumb_ip)
+    - Describes flexion transitions: bending/straightening
+2. finger_spacing
+    - Keyed by adjacent finger pairs (e.g., "index, middle")
+    - Captures dynamic spacing between adjacent fingers.
+3. finger_distance
+    - Keyed by fingertip pairs (e.g., "thumb_tip, index_tip")
+    - Describes the contact condition between the thumb and the fingertips of the other four fingers on the same hand.
+4. wrist_trajectory
+    - Axes: left-right, front-back, down-up
+    - Describes the wrist's motion along vertical, horizontal, and depth axes.
+
+Two-Hand Relationships:
+The two_hand_relationships section captures inter-hand spatial dynamics:
+
+1. finger_finger_distance
+    - Fingertip-to-fingertip distances across hands
+2. finger_palm_distance
+    - Fingertip-to-opposite-palm distances across hands
+3. palm_palm_distance
+    - Scalar distance between palms over time
+4. palm_palm_relative_position
+    - Axial description of spatial positioning between palms
+    - Includes: left-right, front-back, up-down
+
+[Task Instruction]**:**
+
+Analyze the full motion sequence and generate a single, well-structured paragraph that **summarizes the motion over time**. Focus strictly on the physical aspects: finger movements, wrist motion, and inter-hand distances or alignment. Do **not** interpret gestures, infer intent, or provide symbolic meanings. Your output must adhere to the following constraints:
+
+- Output one paragraph only — no lists, bullet points, explanations, or any extra formatting
+- Focus solely on motion: do **not** infer gestures, intent, meaning, or symbolic behavior.
+- Use direct, confident, and unambiguous language.
+- Always describe finger flexing at the level of the whole finger. Do not break it down into joint-level details. Exception: If a finger shows hyperextension at the base joint but bending at the distal joint, you should describe the joints separately and clearly.
+- If there are events such as contact or hyperextension, make sure they are always included in the annotation and never omitted.
+- Indicate the temporal position of an event within the sequence. For example, whether it appears at the start, the end, or recurs across the sequence.
+
+[Motion Description Rules (with Examples)]:
+
+1. **Structure:**
+    - Begin with the left hand's motion.
+    - Then describe the right hand.
+    - End with inter-hand spatial relationships.
+2. **Left/Right Hand Motion Guidelines:**
+    - Highlight notable features: extreme state change, contact, high-speed changes, significant spacing shifts, extreme flexion.
+        - Good: The left index finger quickly moves from fully extended to fully bent. (extrame flexion state change, high-speed motion)
+        - Good: The spacing between the right index and middle fingers changes from a touching state to being far apart at a medium speed. (extrame flexion state change)
+        - Good: The fingertips of the left pinky and thumb maintain contact. (Contact information is important)
+        - Bad: The right thumbtip and ring fingertip maintain a certain distance from each other. (There is no extreme state or high-speed change; separation between the thumb and ring finger is common.)
+    - Summarize flexion at the finger level only: Do **not** describe individual joints; Combine joint data to describe **each finger as a whole** in terms of its overall bend state over time.
+        - Good: The left index finger remains in a fully bent state.
+        - Bad:  The MCP joint of the left index finger remains in a fully bent state; the PIP joint of the left index finger remains in a fully bent state; the DIP joint of the left index finger remains in a fully bent state.
+    - Avoid trivial spatial details (e.g., natural finger adjacency) unless extreme or unique.
+        - Bad: The index and middle fingers are near each other.
+    - Condense similar finger behaviors for clarity and conciseness.
+        - Good: The right index and middle fingers move from partially bent to fully extended.
+        - Bad:  The right index finger move from partially bent to fully extended; The right middlefinger move from partially bent to fully extended
+    - Summarize the repeated pattern of finger/hand motion.
+        - Good: The left index finger and the right palm repeatedly make contact and then move apart.
+        - Bad: he left index finger and the right palm make contact, move apart, make contact, move apart, and then make contact.
+3. **Two-Hand Relationship Guidelines:**
+    - Emphasize meaningful interactions and features: contact, high speed motion, extreme state change
+        - Good: The right index fingertip quickly moved from a distant position to make contact with the left palm. (contact, high speed motion)
+        - Good: Initially, the right hand was positioned above the left hand, but it gradually moved to a position below it. (extreme state change)
+        - Bad: The left ring fingertip and the right thumb fingertip maintained a relatively large distance. (no meaningful interaction and feature)
+    - Avoid trivial spatial details unless extreme or unique. (Similar to single hand motion guideline)
+    - Condense similar finger behaviors for clarity and conciseness. (Similar to single hand motion guideline)
+4. **Contact Extra Rule:**
+    - If a fingertip makes contact with another part (e.g., a palm or another fingertip), do not describe additional proximity or distance relations involving that fingertip. Contact overrides all other spatial relationships.
+        - Good: The left index fingertip made contact with the right palm center. （ No need to also mention 'the fingertip approached the palm' or 'distance reduced'.)
+        - Bad: The left index fingertip moved closer to the right palm and made contact, while staying near the right middle finger. (Redundant:  no need to mention proximity to the right middle finger.)
+
+[Style]**:**
+
+- Maintain clarity and fluency; Avoid speculation (e.g., “might,” “seems,” “possibly”);
+- Summarize only the motion — do not include explanations or metadata.
+- Avoid repetition. Prioritize precision and tempo in the narrative.
+
+[Example Input 1]:
+{
+    "frame_count": 56,
+    "left_hand_events": {
+        "finger_flexing": {
+            "thumb_cmc": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Fully extended",
+                    "end_des": "Fully extended",
+                    "v_des": "Slow"
+                }
+            ],
+            "thumb_mcp": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Fully extended",
+                    "end_des": "Fully extended",
+                    "v_des": "Slow"
+                }
+            ],
+            "thumb_ip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Fully extended",
+                    "end_des": "Fully extended",
+                    "v_des": "Slow"
+                }
+            ],
+            "index_mcp": [
+                {
+                    "start": 12,
+                    "end": 38,
+                    "start_des": "Slightly bent",
+                    "end_des": "Partially bent",
+                    "v_des": "Slow"
+                },
+                {
+                    "start": 44,
+                    "end": 50,
+                    "start_des": "Partially bent",
+                    "end_des": "Slightly bent",
+                    "v_des": "Slow"
+                }
+            ],
+            "index_pip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Fully bent",
+                    "end_des": "Fully extended",
+                    "v_des": "Medium"
+                }
+            ],
+            "index_dip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Partially bent",
+                    "end_des": "Fully extended",
+                    "v_des": "Medium"
+                }
+            ],
+            "middle_mcp": [
+                {
+                    "start": 0,
+                    "end": 50,
+                    "start_des": "Partially bent",
+                    "end_des": "Fully bent",
+                    "v_des": "Slow"
+                }
+            ],
+            "middle_pip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Fully bent",
+                    "end_des": "Fully bent",
+                    "v_des": "Slow"
+                }
+            ],
+            "middle_dip": [
+                {
+                    "start": 12,
+                    "end": 38,
+                    "start_des": "Partially bent",
+                    "end_des": "Fully bent",
+                    "v_des": "Slow"
+                }
+            ],
+            "ring_mcp": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Fully extended",
+                    "end_des": "Partially bent",
+                    "v_des": "Medium"
+                }
+            ],
+            "ring_pip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Fully bent",
+                    "end_des": "Fully bent",
+                    "v_des": "Slow"
+                }
+            ],
+            "ring_dip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Fully bent",
+                    "end_des": "Fully bent",
+                    "v_des": "Slow"
+                }
+            ],
+            "pinky_mcp": [
+                {
+                    "start": 0,
+                    "end": 50,
+                    "start_des": "Slightly bent",
+                    "end_des": "Partially bent",
+                    "v_des": "Slow"
+                }
+            ],
+            "pinky_pip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Fully bent",
+                    "end_des": "Fully bent",
+                    "v_des": "Slow"
+                }
+            ],
+            "pinky_dip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Fully bent",
+                    "end_des": "Fully bent",
+                    "v_des": "Slow"
+                }
+            ]
+        },
+        "finger_spacing": {
+            "thumb, index": [
+                {
+                    "start": 0,
+                    "end": 8,
+                    "start_des": "Far",
+                    "end_des": "Near",
+                    "v_des": "Slow"
+                },
+                {
+                    "start": 8,
+                    "end": 38,
+                    "start_des": "Near",
+                    "end_des": "Far",
+                    "v_des": "Slow"
+                }
+            ],
+            "index, middle": [
+                {
+                    "start": 6,
+                    "end": 44,
+                    "start_des": "Near",
+                    "end_des": "Touch",
+                    "v_des": "Slow"
+                }
+            ],
+            "middle, ring": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Near",
+                    "end_des": "Near",
+                    "v_des": "Slow"
+                }
+            ],
+            "ring, pinky": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Near",
+                    "end_des": "Near",
+                    "v_des": "Slow"
+                }
+            ]
+        },
+        "finger_distance": {
+            "thumb_tip, index_tip": [
+                {
+                    "start": 6,
+                    "end": 56,
+                    "start_des": "Medium",
+                    "end_des": "Far",
+                    "v_des": "Medium"
+                }
+            ],
+            "thumb_tip, middle_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Far",
+                    "end_des": "Far",
+                    "v_des": "Slow"
+                }
+            ],
+            "thumb_tip, ring_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Far",
+                    "end_des": "Far",
+                    "v_des": "Slow"
+                }
+            ],
+            "thumb_tip, pinky_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Far",
+                    "end_des": "Far",
+                    "v_des": "Slow"
+                }
+            ],
+            "index_tip, middle_tip": [
+                {
+                    "start": 0,
+                    "end": 50,
+                    "start_des": "Medium",
+                    "end_des": "Far",
+                    "v_des": "Medium"
+                }
+            ],
+            "index_tip, ring_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Medium",
+                    "end_des": "Far",
+                    "v_des": "Medium"
+                }
+            ],
+            "index_tip, pinky_tip": [
+                {
+                    "start": 0,
+                    "end": 50,
+                    "start_des": "Medium",
+                    "end_des": "Far",
+                    "v_des": "Medium"
+                }
+            ],
+            "middle_tip, ring_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Near",
+                    "end_des": "Near",
+                    "v_des": "Slow"
+                }
+            ],
+            "middle_tip, pinky_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Medium",
+                    "end_des": "Medium",
+                    "v_des": "Slow"
+                }
+            ],
+            "ring_tip, pinky_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Near",
+                    "end_des": "Near",
+                    "v_des": "Slow"
+                }
+            ]
+        },
+        "wrist_trajectory": {
+            "left-right": [
+                {
+                    "start": 0,
+                    "end": 38,
+                    "direction": "left-to-right",
+                    "v_des": "Slow"
+                },
+                {
+                    "start": 50,
+                    "end": 56,
+                    "direction": "right-to-left",
+                    "v_des": "Slow"
+                }
+            ],
+            "front-back": [
+                {
+                    "start": 0,
+                    "end": 44,
+                    "direction": "front-to-back",
+                    "v_des": "Slow"
+                },
+                {
+                    "start": 44,
+                    "end": 56,
+                    "direction": "back-to-front",
+                    "v_des": "Slow"
+                }
+            ],
+            "down-up": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "direction": "up-to-down",
+                    "v_des": "Slow"
+                }
+            ]
+        }
+    },
+    "right_hand_events": {
+        "finger_flexing": {
+            "thumb_cmc": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Fully extended",
+                    "end_des": "Fully extended",
+                    "v_des": "Slow"
+                }
+            ],
+            "thumb_mcp": [
+                {
+                    "start": 0,
+                    "end": 50,
+                    "start_des": "Fully extended",
+                    "end_des": "Slightly bent",
+                    "v_des": "Medium"
+                }
+            ],
+            "thumb_ip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Fully extended",
+                    "end_des": "Fully extended",
+                    "v_des": "Slow"
+                }
+            ],
+            "index_mcp": [
+                {
+                    "start": 0,
+                    "end": 50,
+                    "start_des": "Fully extended",
+                    "end_des": "Partially bent",
+                    "v_des": "Medium"
+                }
+            ],
+            "index_pip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Partially bent",
+                    "end_des": "Fully extended",
+                    "v_des": "Medium"
+                }
+            ],
+            "index_dip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Partially bent",
+                    "end_des": "Fully extended",
+                    "v_des": "Medium"
+                }
+            ],
+            "middle_mcp": [
+                {
+                    "start": 0,
+                    "end": 8,
+                    "start_des": "Partially bent",
+                    "end_des": "Slightly bent",
+                    "v_des": "Slow"
+                }
+            ],
+            "middle_pip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Fully bent",
+                    "end_des": "Fully extended",
+                    "v_des": "Medium"
+                }
+            ],
+            "middle_dip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Partially bent",
+                    "end_des": "Fully extended",
+                    "v_des": "Medium"
+                }
+            ],
+            "ring_mcp": [
+                {
+                    "start": 0,
+                    "end": 20,
+                    "start_des": "Partially bent",
+                    "end_des": "Fully extended",
+                    "v_des": "Medium"
+                }
+            ],
+            "ring_pip": [
+                {
+                    "start": 0,
+                    "end": 20,
+                    "start_des": "Fully extended",
+                    "end_des": "Slightly bent",
+                    "v_des": "Medium"
+                },
+                {
+                    "start": 20,
+                    "end": 56,
+                    "start_des": "Slightly bent",
+                    "end_des": "Fully extended",
+                    "v_des": "Slow"
+                }
+            ],
+            "ring_dip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Fully extended",
+                    "end_des": "Fully extended",
+                    "v_des": "Slow"
+                }
+            ],
+            "pinky_mcp": [
+                {
+                    "start": 0,
+                    "end": 32,
+                    "start_des": "Partially bent",
+                    "end_des": "Fully extended",
+                    "v_des": "Medium"
+                }
+            ],
+            "pinky_pip": [
+                {
+                    "start": 0,
+                    "end": 32,
+                    "start_des": "Partially bent",
+                    "end_des": "Fully extended",
+                    "v_des": "Slow"
+                }
+            ],
+            "pinky_dip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Fully extended",
+                    "end_des": "Fully extended",
+                    "v_des": "Slow"
+                }
+            ]
+        },
+        "finger_spacing": {
+            "thumb, index": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Far",
+                    "end_des": "Far",
+                    "v_des": "Slow"
+                }
+            ],
+            "index, middle": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Near",
+                    "end_des": "Near",
+                    "v_des": "Slow"
+                }
+            ],
+            "middle, ring": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Near",
+                    "end_des": "Near",
+                    "v_des": "Slow"
+                }
+            ],
+            "ring, pinky": [
+                {
+                    "start": 0,
+                    "end": 44,
+                    "start_des": "Touch",
+                    "end_des": "Near",
+                    "v_des": "Slow"
+                }
+            ]
+        },
+        "finger_distance": {
+            "thumb_tip, index_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Far",
+                    "end_des": "Far",
+                    "v_des": "Slow"
+                }
+            ],
+            "thumb_tip, middle_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Far",
+                    "end_des": "Far",
+                    "v_des": "Slow"
+                }
+            ],
+            "thumb_tip, ring_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Far",
+                    "end_des": "Far",
+                    "v_des": "Slow"
+                }
+            ],
+            "thumb_tip, pinky_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Far",
+                    "end_des": "Far",
+                    "v_des": "Slow"
+                }
+            ],
+            "index_tip, middle_tip": [
+                {
+                    "start": 12,
+                    "end": 44,
+                    "start_des": "Medium",
+                    "end_des": "Near",
+                    "v_des": "Slow"
+                }
+            ],
+            "index_tip, ring_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Medium",
+                    "end_des": "Medium",
+                    "v_des": "Medium"
+                }
+            ],
+            "index_tip, pinky_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Medium",
+                    "end_des": "Medium",
+                    "v_des": "Slow"
+                }
+            ],
+            "middle_tip, ring_tip": [
+                {
+                    "start": 0,
+                    "end": 32,
+                    "start_des": "Medium",
+                    "end_des": "Near",
+                    "v_des": "Medium"
+                }
+            ],
+            "middle_tip, pinky_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Medium",
+                    "end_des": "Medium",
+                    "v_des": "Medium"
+                }
+            ],
+            "ring_tip, pinky_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Medium",
+                    "end_des": "Medium",
+                    "v_des": "Slow"
+                }
+            ]
+        },
+        "wrist_trajectory": {
+            "left-right": [
+                {
+                    "start": 0,
+                    "end": 32,
+                    "direction": "left-to-right",
+                    "v_des": "Slow"
+                },
+                {
+                    "start": 32,
+                    "end": 50,
+                    "direction": "right-to-left",
+                    "v_des": "Slow"
+                },
+                {
+                    "start": 50,
+                    "end": 56,
+                    "direction": "left-to-right",
+                    "v_des": "Slow"
+                }
+            ],
+            "front-back": [
+                {
+                    "start": 0,
+                    "end": 20,
+                    "direction": "back-to-front",
+                    "v_des": "Slow"
+                },
+                {
+                    "start": 20,
+                    "end": 38,
+                    "direction": "front-to-back",
+                    "v_des": "Slow"
+                },
+                {
+                    "start": 44,
+                    "end": 50,
+                    "direction": "back-to-front",
+                    "v_des": "Slow"
+                },
+                {
+                    "start": 50,
+                    "end": 56,
+                    "direction": "front-to-back",
+                    "v_des": "Slow"
+                }
+            ],
+            "down-up": [
+                {
+                    "start": 0,
+                    "end": 44,
+                    "direction": "down-to-up",
+                    "v_des": "Slow"
+                }
+            ]
+        }
+    },
+    "two_hand_relationships": {
+        "finger_finger_distance": {
+            "left_thumb_tip, right_thumb_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Far",
+                    "end_des": "Far",
+                    "v_des": "Slow"
+                }
+            ],
+            "left_thumb_tip, right_index_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Far",
+                    "end_des": "Far",
+                    "v_des": "Medium"
+                }
+            ],
+            "left_thumb_tip, right_middle_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Far",
+                    "end_des": "Far",
+                    "v_des": "Slow"
+                }
+            ],
+            "left_thumb_tip, right_ring_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Far",
+                    "end_des": "Far",
+                    "v_des": "Medium"
+                }
+            ],
+            "left_thumb_tip, right_pinky_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Far",
+                    "end_des": "Far",
+                    "v_des": "Slow"
+                }
+            ],
+            "left_index_tip, right_thumb_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Far",
+                    "end_des": "Far",
+                    "v_des": "Medium"
+                }
+            ],
+            "left_index_tip, right_index_tip": [
+                {
+                    "start": 0,
+                    "end": 20,
+                    "start_des": "Far",
+                    "end_des": "Medium",
+                    "v_des": "Medium"
+                },
+                {
+                    "start": 20,
+                    "end": 50,
+                    "start_des": "Medium",
+                    "end_des": "Far",
+                    "v_des": "Medium"
+                }
+            ],
+            "left_index_tip, right_middle_tip": [
+                {
+                    "start": 0,
+                    "end": 20,
+                    "start_des": "Far",
+                    "end_des": "Medium",
+                    "v_des": "Fast"
+                },
+                {
+                    "start": 20,
+                    "end": 56,
+                    "start_des": "Medium",
+                    "end_des": "Far",
+                    "v_des": "Medium"
+                }
+            ],
+            "left_index_tip, right_ring_tip": [
+                {
+                    "start": 0,
+                    "end": 14,
+                    "start_des": "Far",
+                    "end_des": "Medium",
+                    "v_des": "Fast"
+                },
+                {
+                    "start": 14,
+                    "end": 56,
+                    "start_des": "Medium",
+                    "end_des": "Far",
+                    "v_des": "Medium"
+                }
+            ],
+            "left_index_tip, right_pinky_tip": [
+                {
+                    "start": 0,
+                    "end": 20,
+                    "start_des": "Far",
+                    "end_des": "Medium",
+                    "v_des": "Fast"
+                },
+                {
+                    "start": 20,
+                    "end": 50,
+                    "start_des": "Medium",
+                    "end_des": "Far",
+                    "v_des": "Medium"
+                }
+            ],
+            "left_middle_tip, right_thumb_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Far",
+                    "end_des": "Far",
+                    "v_des": "Medium"
+                }
+            ],
+            "left_middle_tip, right_index_tip": [
+                {
+                    "start": 0,
+                    "end": 50,
+                    "start_des": "Medium",
+                    "end_des": "Far",
+                    "v_des": "Fast"
+                }
+            ],
+            "left_middle_tip, right_middle_tip": [
+                {
+                    "start": 0,
+                    "end": 8,
+                    "start_des": "Far",
+                    "end_des": "Medium",
+                    "v_des": "Fast"
+                },
+                {
+                    "start": 8,
+                    "end": 50,
+                    "start_des": "Medium",
+                    "end_des": "Far",
+                    "v_des": "Fast"
+                }
+            ],
+            "left_middle_tip, right_ring_tip": [
+                {
+                    "start": 0,
+                    "end": 50,
+                    "start_des": "Medium",
+                    "end_des": "Far",
+                    "v_des": "Fast"
+                }
+            ],
+            "left_middle_tip, right_pinky_tip": [
+                {
+                    "start": 0,
+                    "end": 8,
+                    "start_des": "Far",
+                    "end_des": "Medium",
+                    "v_des": "Fast"
+                },
+                {
+                    "start": 8,
+                    "end": 50,
+                    "start_des": "Medium",
+                    "end_des": "Far",
+                    "v_des": "Fast"
+                }
+            ],
+            "left_ring_tip, right_thumb_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Far",
+                    "end_des": "Far",
+                    "v_des": "Medium"
+                }
+            ],
+            "left_ring_tip, right_index_tip": [
+                {
+                    "start": 0,
+                    "end": 50,
+                    "start_des": "Medium",
+                    "end_des": "Far",
+                    "v_des": "Fast"
+                }
+            ],
+            "left_ring_tip, right_middle_tip": [
+                {
+                    "start": 6,
+                    "end": 50,
+                    "start_des": "Medium",
+                    "end_des": "Far",
+                    "v_des": "Fast"
+                }
+            ],
+            "left_ring_tip, right_ring_tip": [
+                {
+                    "start": 0,
+                    "end": 50,
+                    "start_des": "Medium",
+                    "end_des": "Far",
+                    "v_des": "Fast"
+                }
+            ],
+            "left_ring_tip, right_pinky_tip": [
+                {
+                    "start": 0,
+                    "end": 8,
+                    "start_des": "Far",
+                    "end_des": "Medium",
+                    "v_des": "Fast"
+                },
+                {
+                    "start": 8,
+                    "end": 50,
+                    "start_des": "Near",
+                    "end_des": "Far",
+                    "v_des": "Fast"
+                }
+            ],
+            "left_pinky_tip, right_thumb_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Far",
+                    "end_des": "Far",
+                    "v_des": "Medium"
+                }
+            ],
+            "left_pinky_tip, right_index_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Medium",
+                    "end_des": "Far",
+                    "v_des": "Fast"
+                }
+            ],
+            "left_pinky_tip, right_middle_tip": [
+                {
+                    "start": 0,
+                    "end": 50,
+                    "start_des": "Medium",
+                    "end_des": "Far",
+                    "v_des": "Fast"
+                }
+            ],
+            "left_pinky_tip, right_ring_tip": [
+                {
+                    "start": 0,
+                    "end": 50,
+                    "start_des": "Medium",
+                    "end_des": "Far",
+                    "v_des": "Fast"
+                }
+            ],
+            "left_pinky_tip, right_pinky_tip": [
+                {
+                    "start": 0,
+                    "end": 8,
+                    "start_des": "Far",
+                    "end_des": "Near",
+                    "v_des": "Fast"
+                },
+                {
+                    "start": 8,
+                    "end": 56,
+                    "start_des": "Near",
+                    "end_des": "Far",
+                    "v_des": "Fast"
+                }
+            ]
+        },
+        "finger_palm_distance": {
+            "left_thumb_tip, right_palm": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Far",
+                    "end_des": "Far",
+                    "v_des": "Slow"
+                }
+            ],
+            "left_index_tip, right_palm": [
+                {
+                    "start": 0,
+                    "end": 50,
+                    "start_des": "Far",
+                    "end_des": "Contact",
+                    "v_des": "Medium"
+                },
+                {
+                    "start": 50,
+                    "end": 56,
+                    "start_des": "Contact",
+                    "end_des": "Near",
+                    "v_des": "Medium"
+                }
+            ],
+            "left_middle_tip, right_palm": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Medium",
+                    "end_des": "Medium",
+                    "v_des": "Slow"
+                }
+            ],
+            "left_ring_tip, right_palm": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Medium",
+                    "end_des": "Medium",
+                    "v_des": "Slow"
+                }
+            ],
+            "left_pinky_tip, right_palm": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Medium",
+                    "end_des": "Medium",
+                    "v_des": "Slow"
+                }
+            ],
+            "right_thumb_tip, left_palm": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Far",
+                    "end_des": "Far",
+                    "v_des": "Slow"
+                }
+            ],
+            "right_index_tip, left_palm": [
+                {
+                    "start": 0,
+                    "end": 50,
+                    "start_des": "Medium",
+                    "end_des": "Far",
+                    "v_des": "Medium"
+                }
+            ],
+            "right_middle_tip, left_palm": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Near",
+                    "end_des": "Far",
+                    "v_des": "Medium"
+                }
+            ],
+            "right_ring_tip, left_palm": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Near",
+                    "end_des": "Far",
+                    "v_des": "Medium"
+                }
+            ],
+            "right_pinky_tip, left_palm": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Near",
+                    "end_des": "Medium",
+                    "v_des": "Medium"
+                }
+            ]
+        },
+        "palm_palm_distance": {
+            "left_palm, right_palm": [
+                {
+                    "start": 0,
+                    "end": 14,
+                    "start_des": "Medium",
+                    "end_des": "Far",
+                    "v_des": "Medium"
+                },
+                {
+                    "start": 14,
+                    "end": 56,
+                    "start_des": "Far",
+                    "end_des": "Medium",
+                    "v_des": "Slow"
+                }
+            ]
+        },
+        "palm_palm_relative_position": {
+            "left-right": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "right hand is to the LEFT of the left hand.",
+                    "end_des": "right hand is to the LEFT of the left hand.",
+                    "v_des": "Slow"
+                }
+            ],
+            "front-back": [
+                {
+                    "start": 0,
+                    "end": 50,
+                    "start_des": "right hand is to the FRONT of the left hand.",
+                    "end_des": "right hand is to the BACK of the left hand.",
+                    "v_des": "Slow"
+                }
+            ],
+            "up-down": [
+                {
+                    "start": 0,
+                    "end": 50,
+                    "start_des": "right hand is to the UP of the left hand.",
+                    "end_des": "right hand is to the DOWN of the left hand.",
+                    "v_des": "Medium"
+                }
+            ]
+        }
+    }
+}
+
+[Example Output 1]:
+The left thumb stays fully extended throughout, while the left index finger transitions from a fully bent posture to nearly fully extended at a medium pace, and the middle, ring, and pinky fingers remain predominantly bent with gradual increases in flexion. The left wrist shifts slowly from left to right, front to back, and up to down over the course of the sequence. On the right hand, the thumb remains extended with a slight bend appearing near the end, and the index, middle, ring, and pinky fingers move from partially bent to more extended states overall. Its wrist makes slow movements alternating between left-to-right and right-to-left, as well as back-to-front and front-to-back, while rising up and then settling. The left index fingertip makes contact with the right palm with a medium speed. The palms briefly shift from a medium distance to a far distance before returning to medium range, with the right hand moving from a position above and in front of the left hand to one behind and below it.
+
+[Example Input 2]:
+{
+    "frame_count": 56,
+    "left_hand_events": {
+        "finger_flexing": {
+            "thumb_cmc": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Fully extended",
+                    "end_des": "Fully extended",
+                    "v_des": "Slow"
+                }
+            ],
+            "thumb_mcp": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Fully extended",
+                    "end_des": "Fully extended",
+                    "v_des": "Slow"
+                }
+            ],
+            "thumb_ip": [
+                {
+                    "start": 0,
+                    "end": 20,
+                    "start_des": "Fully extended",
+                    "end_des": "Slightly bent",
+                    "v_des": "Fast"
+                }
+            ],
+            "index_mcp": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Fully extended",
+                    "end_des": "Fully extended",
+                    "v_des": "Slow"
+                }
+            ],
+            "index_pip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Fully extended",
+                    "end_des": "Fully extended",
+                    "v_des": "Slow"
+                }
+            ],
+            "index_dip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Fully extended",
+                    "end_des": "Fully extended",
+                    "v_des": "Slow"
+                }
+            ],
+            "middle_mcp": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Fully extended",
+                    "end_des": "Fully extended",
+                    "v_des": "Slow"
+                }
+            ],
+            "middle_pip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Fully extended",
+                    "end_des": "Fully extended",
+                    "v_des": "Slow"
+                }
+            ],
+            "middle_dip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Fully extended",
+                    "end_des": "Fully extended",
+                    "v_des": "Slow"
+                }
+            ],
+            "ring_mcp": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Fully extended",
+                    "end_des": "Fully extended",
+                    "v_des": "Slow"
+                }
+            ],
+            "ring_pip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Fully extended",
+                    "end_des": "Fully extended",
+                    "v_des": "Slow"
+                }
+            ],
+            "ring_dip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Fully extended",
+                    "end_des": "Fully extended",
+                    "v_des": "Slow"
+                }
+            ],
+            "pinky_mcp": [
+                {
+                    "start": 0,
+                    "end": 38,
+                    "start_des": "Slightly bent",
+                    "end_des": "Fully extended",
+                    "v_des": "Slow"
+                }
+            ],
+            "pinky_pip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Fully extended",
+                    "end_des": "Fully extended",
+                    "v_des": "Slow"
+                }
+            ],
+            "pinky_dip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Fully extended",
+                    "end_des": "Fully extended",
+                    "v_des": "Slow"
+                }
+            ]
+        },
+        "finger_spacing": {
+            "thumb, index": [
+                {
+                    "start": 12,
+                    "end": 32,
+                    "start_des": "Far",
+                    "end_des": "Near",
+                    "v_des": "Slow"
+                },
+                {
+                    "start": 44,
+                    "end": 50,
+                    "start_des": "Near",
+                    "end_des": "Far",
+                    "v_des": "Slow"
+                }
+            ],
+            "index, middle": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Near",
+                    "end_des": "Near",
+                    "v_des": "Slow"
+                }
+            ],
+            "middle, ring": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Near",
+                    "end_des": "Near",
+                    "v_des": "Slow"
+                }
+            ],
+            "ring, pinky": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Near",
+                    "end_des": "Near",
+                    "v_des": "Slow"
+                }
+            ]
+        },
+        "finger_distance": {
+            "thumb_tip, index_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Far",
+                    "end_des": "Far",
+                    "v_des": "Slow"
+                }
+            ],
+            "thumb_tip, middle_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Far",
+                    "end_des": "Far",
+                    "v_des": "Medium"
+                }
+            ],
+            "thumb_tip, ring_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Far",
+                    "end_des": "Far",
+                    "v_des": "Medium"
+                }
+            ],
+            "thumb_tip, pinky_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Far",
+                    "end_des": "Far",
+                    "v_des": "Slow"
+                }
+            ],
+            "index_tip, middle_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Medium",
+                    "end_des": "Medium",
+                    "v_des": "Slow"
+                }
+            ],
+            "index_tip, ring_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Far",
+                    "end_des": "Far",
+                    "v_des": "Slow"
+                }
+            ],
+            "index_tip, pinky_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Far",
+                    "end_des": "Far",
+                    "v_des": "Slow"
+                }
+            ],
+            "middle_tip, ring_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Medium",
+                    "end_des": "Medium",
+                    "v_des": "Slow"
+                }
+            ],
+            "middle_tip, pinky_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Far",
+                    "end_des": "Far",
+                    "v_des": "Slow"
+                }
+            ],
+            "ring_tip, pinky_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Medium",
+                    "end_des": "Medium",
+                    "v_des": "Slow"
+                }
+            ]
+        },
+        "wrist_trajectory": {
+            "left-right": [
+                {
+                    "start": 0,
+                    "end": 8,
+                    "direction": "left-to-right",
+                    "v_des": "Medium"
+                },
+                {
+                    "start": 8,
+                    "end": 32,
+                    "direction": "right-to-left",
+                    "v_des": "Slow"
+                },
+                {
+                    "start": 32,
+                    "end": 56,
+                    "direction": "left-to-right",
+                    "v_des": "Medium"
+                }
+            ],
+            "front-back": [
+                {
+                    "start": 0,
+                    "end": 8,
+                    "direction": "front-to-back",
+                    "v_des": "Medium"
+                },
+                {
+                    "start": 8,
+                    "end": 14,
+                    "direction": "back-to-front",
+                    "v_des": "Slow"
+                },
+                {
+                    "start": 14,
+                    "end": 20,
+                    "direction": "front-to-back",
+                    "v_des": "Slow"
+                },
+                {
+                    "start": 26,
+                    "end": 32,
+                    "direction": "back-to-front",
+                    "v_des": "Slow"
+                },
+                {
+                    "start": 32,
+                    "end": 44,
+                    "direction": "front-to-back",
+                    "v_des": "Medium"
+                },
+                {
+                    "start": 44,
+                    "end": 56,
+                    "direction": "back-to-front",
+                    "v_des": "Medium"
+                }
+            ],
+            "down-up": [
+                {
+                    "start": 0,
+                    "end": 44,
+                    "direction": "up-to-down",
+                    "v_des": "Slow"
+                },
+                {
+                    "start": 44,
+                    "end": 56,
+                    "direction": "down-to-up",
+                    "v_des": "Medium"
+                }
+            ]
+        }
+    },
+    "right_hand_events": {
+        "finger_flexing": {
+            "thumb_cmc": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Fully extended",
+                    "end_des": "Fully extended",
+                    "v_des": "Slow"
+                }
+            ],
+            "thumb_mcp": [
+                {
+                    "start": 0,
+                    "end": 32,
+                    "start_des": "Fully extended",
+                    "end_des": "Slightly bent",
+                    "v_des": "Medium"
+                },
+                {
+                    "start": 44,
+                    "end": 50,
+                    "start_des": "Fully extended",
+                    "end_des": "Slightly bent",
+                    "v_des": "Slow"
+                }
+            ],
+            "thumb_ip": [
+                {
+                    "start": 0,
+                    "end": 14,
+                    "start_des": "Fully extended",
+                    "end_des": "Slightly bent",
+                    "v_des": "Fast"
+                }
+            ],
+            "index_mcp": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Fully extended",
+                    "end_des": "Fully extended",
+                    "v_des": "Slow"
+                }
+            ],
+            "index_pip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Fully extended",
+                    "end_des": "Fully extended",
+                    "v_des": "Slow"
+                }
+            ],
+            "index_dip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Fully extended",
+                    "end_des": "Fully extended",
+                    "v_des": "Slow"
+                }
+            ],
+            "middle_mcp": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Fully extended",
+                    "end_des": "Fully extended",
+                    "v_des": "Slow"
+                }
+            ],
+            "middle_pip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Fully extended",
+                    "end_des": "Fully extended",
+                    "v_des": "Slow"
+                }
+            ],
+            "middle_dip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Fully extended",
+                    "end_des": "Fully extended",
+                    "v_des": "Slow"
+                }
+            ],
+            "ring_mcp": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Fully extended",
+                    "end_des": "Fully extended",
+                    "v_des": "Slow"
+                }
+            ],
+            "ring_pip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Fully extended",
+                    "end_des": "Fully extended",
+                    "v_des": "Slow"
+                }
+            ],
+            "ring_dip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Fully extended",
+                    "end_des": "Fully extended",
+                    "v_des": "Slow"
+                }
+            ],
+            "pinky_mcp": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Slightly bent",
+                    "end_des": "Fully extended",
+                    "v_des": "Medium"
+                }
+            ],
+            "pinky_pip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Fully extended",
+                    "end_des": "Fully extended",
+                    "v_des": "Slow"
+                }
+            ],
+            "pinky_dip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Fully extended",
+                    "end_des": "Fully extended",
+                    "v_des": "Slow"
+                }
+            ]
+        },
+        "finger_spacing": {
+            "thumb, index": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Far",
+                    "end_des": "Far",
+                    "v_des": "Slow"
+                }
+            ],
+            "index, middle": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Near",
+                    "end_des": "Near",
+                    "v_des": "Slow"
+                }
+            ],
+            "middle, ring": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Near",
+                    "end_des": "Near",
+                    "v_des": "Slow"
+                }
+            ],
+            "ring, pinky": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Near",
+                    "end_des": "Near",
+                    "v_des": "Slow"
+                }
+            ]
+        },
+        "finger_distance": {
+            "thumb_tip, index_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Far",
+                    "end_des": "Far",
+                    "v_des": "Slow"
+                }
+            ],
+            "thumb_tip, middle_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Far",
+                    "end_des": "Far",
+                    "v_des": "Slow"
+                }
+            ],
+            "thumb_tip, ring_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Far",
+                    "end_des": "Far",
+                    "v_des": "Medium"
+                }
+            ],
+            "thumb_tip, pinky_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Far",
+                    "end_des": "Far",
+                    "v_des": "Medium"
+                }
+            ],
+            "index_tip, middle_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Medium",
+                    "end_des": "Medium",
+                    "v_des": "Slow"
+                }
+            ],
+            "index_tip, ring_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Far",
+                    "end_des": "Far",
+                    "v_des": "Medium"
+                }
+            ],
+            "index_tip, pinky_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Far",
+                    "end_des": "Far",
+                    "v_des": "Slow"
+                }
+            ],
+            "middle_tip, ring_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Medium",
+                    "end_des": "Medium",
+                    "v_des": "Slow"
+                }
+            ],
+            "middle_tip, pinky_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Far",
+                    "end_des": "Far",
+                    "v_des": "Slow"
+                }
+            ],
+            "ring_tip, pinky_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Medium",
+                    "end_des": "Medium",
+                    "v_des": "Slow"
+                }
+            ]
+        },
+        "wrist_trajectory": {
+            "left-right": [
+                {
+                    "start": 0,
+                    "end": 14,
+                    "direction": "right-to-left",
+                    "v_des": "Medium"
+                },
+                {
+                    "start": 14,
+                    "end": 32,
+                    "direction": "left-to-right",
+                    "v_des": "Medium"
+                },
+                {
+                    "start": 32,
+                    "end": 44,
+                    "direction": "right-to-left",
+                    "v_des": "Medium"
+                },
+                {
+                    "start": 44,
+                    "end": 50,
+                    "direction": "left-to-right",
+                    "v_des": "Medium"
+                },
+                {
+                    "start": 50,
+                    "end": 56,
+                    "direction": "right-to-left",
+                    "v_des": "Slow"
+                }
+            ],
+            "front-back": [
+                {
+                    "start": 0,
+                    "end": 8,
+                    "direction": "front-to-back",
+                    "v_des": "Slow"
+                },
+                {
+                    "start": 14,
+                    "end": 20,
+                    "direction": "front-to-back",
+                    "v_des": "Medium"
+                },
+                {
+                    "start": 26,
+                    "end": 32,
+                    "direction": "back-to-front",
+                    "v_des": "Medium"
+                },
+                {
+                    "start": 32,
+                    "end": 44,
+                    "direction": "front-to-back",
+                    "v_des": "Medium"
+                },
+                {
+                    "start": 44,
+                    "end": 56,
+                    "direction": "back-to-front",
+                    "v_des": "Medium"
+                }
+            ],
+            "down-up": [
+                {
+                    "start": 0,
+                    "end": 50,
+                    "direction": "up-to-down",
+                    "v_des": "Slow"
+                },
+                {
+                    "start": 50,
+                    "end": 56,
+                    "direction": "down-to-up",
+                    "v_des": "Medium"
+                }
+            ]
+        }
+    },
+    "two_hand_relationships": {
+        "finger_finger_distance": {
+            "left_thumb_tip, right_thumb_tip": [
+                {
+                    "start": 0,
+                    "end": 14,
+                    "start_des": "Contact",
+                    "end_des": "Near",
+                    "v_des": "Slow"
+                },
+                {
+                    "start": 14,
+                    "end": 32,
+                    "start_des": "Near",
+                    "end_des": "Contact",
+                    "v_des": "Medium"
+                }
+            ],
+            "left_thumb_tip, right_index_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Far",
+                    "end_des": "Far",
+                    "v_des": "Slow"
+                }
+            ],
+            "left_thumb_tip, right_middle_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Far",
+                    "end_des": "Far",
+                    "v_des": "Slow"
+                }
+            ],
+            "left_thumb_tip, right_ring_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Far",
+                    "end_des": "Far",
+                    "v_des": "Slow"
+                }
+            ],
+            "left_thumb_tip, right_pinky_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Far",
+                    "end_des": "Far",
+                    "v_des": "Slow"
+                }
+            ],
+            "left_index_tip, right_thumb_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Far",
+                    "end_des": "Far",
+                    "v_des": "Slow"
+                }
+            ],
+            "left_index_tip, right_index_tip": [
+                {
+                    "start": 0,
+                    "end": 8,
+                    "start_des": "Contact",
+                    "end_des": "Near",
+                    "v_des": "Medium"
+                },
+                {
+                    "start": 26,
+                    "end": 32,
+                    "start_des": "Contact",
+                    "end_des": "Near",
+                    "v_des": "Medium"
+                },
+                {
+                    "start": 32,
+                    "end": 38,
+                    "start_des": "Near",
+                    "end_des": "Contact",
+                    "v_des": "Medium"
+                }
+            ],
+            "left_index_tip, right_middle_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Medium",
+                    "end_des": "Medium",
+                    "v_des": "Slow"
+                }
+            ],
+            "left_index_tip, right_ring_tip": [
+                {
+                    "start": 0,
+                    "end": 44,
+                    "start_des": "Far",
+                    "end_des": "Medium",
+                    "v_des": "Medium"
+                },
+                {
+                    "start": 50,
+                    "end": 56,
+                    "start_des": "Medium",
+                    "end_des": "Far",
+                    "v_des": "Medium"
+                }
+            ],
+            "left_index_tip, right_pinky_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Far",
+                    "end_des": "Far",
+                    "v_des": "Slow"
+                }
+            ],
+            "left_middle_tip, right_thumb_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Far",
+                    "end_des": "Far",
+                    "v_des": "Slow"
+                }
+            ],
+            "left_middle_tip, right_index_tip": [
+                {
+                    "start": 0,
+                    "end": 20,
+                    "start_des": "Far",
+                    "end_des": "Medium",
+                    "v_des": "Medium"
+                }
+            ],
+            "left_middle_tip, right_middle_tip": [
+                {
+                    "start": 0,
+                    "end": 32,
+                    "start_des": "Medium",
+                    "end_des": "Contact",
+                    "v_des": "Medium"
+                }
+            ],
+            "left_middle_tip, right_ring_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Medium",
+                    "end_des": "Medium",
+                    "v_des": "Medium"
+                }
+            ],
+            "left_middle_tip, right_pinky_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Far",
+                    "end_des": "Far",
+                    "v_des": "Slow"
+                }
+            ],
+            "left_ring_tip, right_thumb_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Far",
+                    "end_des": "Far",
+                    "v_des": "Medium"
+                }
+            ],
+            "left_ring_tip, right_index_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Far",
+                    "end_des": "Far",
+                    "v_des": "Slow"
+                }
+            ],
+            "left_ring_tip, right_middle_tip": [
+                {
+                    "start": 0,
+                    "end": 50,
+                    "start_des": "Far",
+                    "end_des": "Medium",
+                    "v_des": "Medium"
+                }
+            ],
+            "left_ring_tip, right_ring_tip": [
+                {
+                    "start": 0,
+                    "end": 38,
+                    "start_des": "Medium",
+                    "end_des": "Contact",
+                    "v_des": "Medium"
+                }
+            ],
+            "left_ring_tip, right_pinky_tip": [
+                {
+                    "start": 0,
+                    "end": 20,
+                    "start_des": "Far",
+                    "end_des": "Medium",
+                    "v_des": "Fast"
+                }
+            ],
+            "left_pinky_tip, right_thumb_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Far",
+                    "end_des": "Far",
+                    "v_des": "Slow"
+                }
+            ],
+            "left_pinky_tip, right_index_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Far",
+                    "end_des": "Far",
+                    "v_des": "Slow"
+                }
+            ],
+            "left_pinky_tip, right_middle_tip": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Far",
+                    "end_des": "Far",
+                    "v_des": "Slow"
+                }
+            ],
+            "left_pinky_tip, right_ring_tip": [
+                {
+                    "start": 0,
+                    "end": 26,
+                    "start_des": "Far",
+                    "end_des": "Medium",
+                    "v_des": "Medium"
+                }
+            ],
+            "left_pinky_tip, right_pinky_tip": [
+                {
+                    "start": 0,
+                    "end": 38,
+                    "start_des": "Far",
+                    "end_des": "Contact",
+                    "v_des": "Medium"
+                }
+            ]
+        },
+        "finger_palm_distance": {
+            "left_thumb_tip, right_palm": [
+                {
+                    "start": 0,
+                    "end": 14,
+                    "start_des": "Near",
+                    "end_des": "Medium",
+                    "v_des": "Slow"
+                },
+                {
+                    "start": 14,
+                    "end": 44,
+                    "start_des": "Medium",
+                    "end_des": "Near",
+                    "v_des": "Slow"
+                }
+            ],
+            "left_index_tip, right_palm": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Medium",
+                    "end_des": "Medium",
+                    "v_des": "Slow"
+                }
+            ],
+            "left_middle_tip, right_palm": [
+                {
+                    "start": 0,
+                    "end": 32,
+                    "start_des": "Far",
+                    "end_des": "Medium",
+                    "v_des": "Slow"
+                }
+            ],
+            "left_ring_tip, right_palm": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Far",
+                    "end_des": "Medium",
+                    "v_des": "Slow"
+                }
+            ],
+            "left_pinky_tip, right_palm": [
+                {
+                    "start": 0,
+                    "end": 38,
+                    "start_des": "Far",
+                    "end_des": "Near",
+                    "v_des": "Medium"
+                }
+            ],
+            "right_thumb_tip, left_palm": [
+                {
+                    "start": 0,
+                    "end": 20,
+                    "start_des": "Medium",
+                    "end_des": "Near",
+                    "v_des": "Slow"
+                }
+            ],
+            "right_index_tip, left_palm": [
+                {
+                    "start": 6,
+                    "end": 32,
+                    "start_des": "Medium",
+                    "end_des": "Near",
+                    "v_des": "Slow"
+                },
+                {
+                    "start": 32,
+                    "end": 56,
+                    "start_des": "Near",
+                    "end_des": "Medium",
+                    "v_des": "Slow"
+                }
+            ],
+            "right_middle_tip, left_palm": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "Medium",
+                    "end_des": "Medium",
+                    "v_des": "Slow"
+                }
+            ],
+            "right_ring_tip, left_palm": [
+                {
+                    "start": 0,
+                    "end": 44,
+                    "start_des": "Medium",
+                    "end_des": "Near",
+                    "v_des": "Slow"
+                }
+            ],
+            "right_pinky_tip, left_palm": [
+                {
+                    "start": 0,
+                    "end": 32,
+                    "start_des": "Medium",
+                    "end_des": "Near",
+                    "v_des": "Medium"
+                }
+            ]
+        },
+        "palm_palm_distance": {
+            "left_palm, right_palm": [
+                {
+                    "start": 30,
+                    "end": 44,
+                    "start_des": "Near",
+                    "end_des": "Contact",
+                    "v_des": "Slow"
+                },
+                {
+                    "start": 44,
+                    "end": 50,
+                    "start_des": "Contact",
+                    "end_des": "Near",
+                    "v_des": "Slow"
+                },
+                {
+                    "start": 50,
+                    "end": 56,
+                    "start_des": "Near",
+                    "end_des": "Contact",
+                    "v_des": "Slow"
+                }
+            ]
+        },
+        "palm_palm_relative_position": {
+            "left-right": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "right hand is to the LEFT of the left hand.",
+                    "end_des": "right hand is to the LEFT of the left hand.",
+                    "v_des": "Slow"
+                }
+            ],
+            "front-back": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "right hand is to the BACK of the left hand.",
+                    "end_des": "right hand is to the BACK of the left hand.",
+                    "v_des": "Slow"
+                }
+            ],
+            "up-down": [
+                {
+                    "start": 0,
+                    "end": 56,
+                    "start_des": "right hand is to the UP of the left hand.",
+                    "end_des": "right hand is to the UP of the left hand.",
+                    "v_des": "Slow"
+                }
+            ]
+        }
+    }
+}
+
+[Example Output 2]:
+The left thumb quickly transitions from fully extended to slightly bent, while the pinky moves from a slightly bent posture to full extension and the remaining left fingers remain fully extended. The left wrist alternates left-to-right and front-to-back at varying speeds, gradually moving downward before lifting again. On the right hand, the thumb bends slightly twice from a fully extended position, the pinky extends from a slight bend, and all other fingers stay extended. Its wrist likewise oscillates left-to-right and front-to-back, descending slowly and then rising. Both thumb tips briefly contact, separate, and contact again, the left index and right index tips alternate between contact and a near state, the left middle tip meets the right middle tip, the left ring tip makes contact with the right ring tip, and the left pinky tip connects with the right pinky tip. The palms also come into contact partway through, move apart slightly, and reconnect by the end.
+
+Now, generate only a detailed textual description for the following two-hand motion:
+[INSERT HERE]
