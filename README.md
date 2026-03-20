@@ -30,6 +30,12 @@
 </p>
 
 <p align="center">
+  <img src="assets/teaser.png" width="100%">
+</p>
+
+## Demo
+
+<p align="center">
   <video src="https://github.com/user-attachments/assets/915bcc2e-99c9-4470-ba8c-71455f76c278" controls width="100%"></video>
 </p>
 
