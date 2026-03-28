@@ -11,8 +11,8 @@
     <a href='' target='_blank'>Bing Zhou</a><sup>3</sup>&emsp;
     <a href='' target='_blank'>Chuan Guo</a><sup>3</sup>&emsp;
     <a href='' target='_blank'>Jian Wang</a><sup>3</sup>&emsp;
-    <a href='https://yxw.web.illinois.edu/' target='_blank'>Yu-Xiong Wang</a><sup>1&ddagger;</sup>&emsp;
-    <a href='https://lgui.web.illinois.edu/' target='_blank'>Liang-Yan Gui</a><sup>1&ddagger;</sup>&emsp;
+    <a href='https://yxw.web.illinois.edu/' target='_blank'>Yu-Xiong Wang</a><sup>1</sup>&emsp;
+    <a href='https://lgui.web.illinois.edu/' target='_blank'>Liang-Yan Gui</a><sup>1</sup>&emsp;
     <br>
     <sup>1</sup>University of Illinois Urbana-Champaign&emsp;
     <sup>2</sup>Specs Inc.&emsp;
@@ -20,7 +20,6 @@
     <br>
     <sup>*</sup>Equal Contribution&emsp;
     <sup>&dagger;</sup>Project Lead&emsp;
-    <sup>&ddagger;</sup>Equal Advising
   </p>
 </p>
 
