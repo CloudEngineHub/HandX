@@ -35,7 +35,7 @@
 ## Demo
 
 <p align="center">
-  <video src="https://github.com/user-attachments/assets/d84a0405-0eda-43d5-8f93-0a2928e430f7" autoplay loop muted playsinline width="100%"></video>
+  <video src="https://github.com/user-attachments/assets/52a9056f-4067-47d6-860d-62bf7e6c2f43" autoplay loop muted playsinline width="100%"></video>
 </p>
 
 
