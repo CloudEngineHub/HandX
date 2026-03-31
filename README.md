@@ -86,7 +86,7 @@ diffusion/
         └── MANO_RIGHT.pkl
 ```
 
-Download the HandX sample data archive from this [link](https://drive.google.com/file/d/1Nd2eWBwSljMuImlN9T20bX7vMUp-T59v/view?usp=sharing), all base data will be released shortly [here](https://drive.google.com/file/d/1Vc9z71RKAgic-ih1lNm2hXgB-LmL6onW/view?usp=sharing) after legal review.
+Download the HandX sample data archive from this [link](https://drive.google.com/file/d/1Nd2eWBwSljMuImlN9T20bX7vMUp-T59v/view?usp=sharing), all base data will be released shortly after legal review.
 This archive contains data from all datasets **except** ARCTIC and H2O, which must be obtained separately due to their redistribution policies.
 
 Extract the archive and place the included 4 files under `data/handx/`:
