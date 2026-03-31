@@ -24,6 +24,10 @@
 </p>
 
 <p align="center">
+  <a href='https://arxiv.org/abs/2603.28766'>
+    <img src='https://img.shields.io/badge/Arxiv-2502.20390-A42C25?style=flat&logo=arXiv&logoColor=A42C25'></a>
+  <a href='https://arxiv.org/pdf/2603.28766.pdf'>
+    <img src='https://img.shields.io/badge/Paper-PDF-yellow?style=flat&logo=arXiv&logoColor=yellow'></a>
   <a href='https://handx-project.github.io'>
     <img src='https://img.shields.io/badge/Project-Page-green?style=flat&logo=Google%20chrome&logoColor=green'></a>
 </p>
