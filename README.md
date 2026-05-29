@@ -90,10 +90,16 @@ diffusion/
         └── MANO_RIGHT.pkl
 ```
 
-Download the HandX sample data archive from this [link](https://drive.google.com/file/d/1Nd2eWBwSljMuImlN9T20bX7vMUp-T59v/view?usp=sharing), all base data will be released shortly after legal review.
-This archive contains data from all datasets **except** ARCTIC and H2O, which must be obtained separately due to their redistribution policies.
+Note: The MANO model files are subject to the MANO license agreement for non-commercial
+scientific research purposes. MANO parameters in the HandX dataset are derived from
+the MANO model; use of the dataset also requires compliance with the MANO license terms.
+See https://mano.is.tue.mpg.de.
 
-Extract the archive and place the included 4 files under `data/handx/`:
+Download the HandX sample data archive from this [link](https://drive.google.com/file/d/1Nd2eWBwSljMuImlN9T20bX7vMUp-T59v/view?usp=sharing), all base data will be released shortly after legal review.
+This archive contains HandX original data together with redistributed data from GigaHands, HOT3D, and HoloAssist. It **does not** include ARCTIC or H2O, which are not redistributed by HandX and must be obtained separately due to their redistribution policies.
+HandX data are stored in merged files, with each entry key and/or metadata identifying its source dataset. Please review the root [`LICENSE`](LICENSE) and applicable third-party license files under [`licenses/`](licenses/) before using or redistributing HandX data.
+
+Extract the archive and place the included files under `data/handx/`:
 
 ```
 data/
@@ -101,12 +107,15 @@ data/
     ├── train_can_pos_all_wotextfeat.npz
     ├── train_mano.npz
     ├── test_can_pos_all_wotextfeat.npz
-    └── test_mano.npz
+    ├── test_mano.npz
+    └── source_metadata.json
 ```
+
+The keys in the redistributed `.npz` files should preserve source attribution, for example `handx_...`, `gigahands_...`, `hot3d_...`, or `holoassist_...`. The corresponding metadata should record the source dataset and original sequence identifier for each entry.
 
 ### Processing ARCTIC and H2O
 
-The `data/processing/` directory contains scripts to process ARCTIC and H2O data and merge them into the base dataset.
+The `data/processing/` directory contains scripts for users to process separately obtained ARCTIC and H2O data and locally merge them into the HandX-format dataset while preserving source-identifying keys.
 
 <details>
   <summary>Directory structure</summary>
@@ -207,14 +216,14 @@ python skeleton2mano.py --input_dir ARCTIC/skeleton_split --output_dir ARCTIC/ma
 <details>
   <summary>Merging</summary>
 
-After processing both datasets, merge them into the base dataset:
+After processing both datasets, locally merge them into the HandX-format dataset:
 
 ```bash
 cd data/processing
 python merge_arctic_h2o.py
 ```
 
-This appends the ARCTIC and H2O data to the existing `.npz` files in `data/handx/`, producing the complete dataset.
+This appends locally processed ARCTIC and H2O data to the existing `.npz` files in `data/handx/`.
 </details>
 
 <details>
@@ -530,11 +539,8 @@ The simulation pipeline takes `.pkl` files containing MANO parameters as input. 
 ```bash
 cd simulation
 
-# Extract specific indices
-python npz_to_pkl.py --npz ../data/handx/test_mano.npz --indices 0 5 10 --output_dir ./pkl_out
-
-# Randomly sample n sequences
-python npz_to_pkl.py --npz ../data/handx/train_mano.npz --random 20 --output_dir ./pkl_out
+# Extract specific source keys
+python npz_to_pkl.py --npz ../data/handx/test_mano.npz --keys hot3d_0001 handx_0002 --output_dir ./pkl_out
 ```
 </details>
 
@@ -602,6 +608,8 @@ If you find this repository useful for your work, please cite:
     year      = {2026},
 }
 ```
+
+HandX data are stored in merged files with source-identifying keys and/or metadata. Please preserve the root [`LICENSE`](LICENSE) and applicable third-party license notices when using or redistributing HandX data.
 
 Please also consider citing the datasets used in this work:
 ```bibtex
