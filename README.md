@@ -44,6 +44,7 @@
 </p>
 
 ## News
+- [2026-05-29] Release the whole HandX dataset.
 - [2026-04-09] Release simulation data replay with IsaacGym and auto-annotation code.
 - [2026-03-31] Initial release of diffusion, autoregressive code and evaluation pipeline.
 
@@ -95,7 +96,7 @@ scientific research purposes. MANO parameters in the HandX dataset are derived f
 the MANO model; use of the dataset also requires compliance with the MANO license terms.
 See https://mano.is.tue.mpg.de.
 
-Download the HandX sample data archive from this [link](https://drive.google.com/file/d/1Nd2eWBwSljMuImlN9T20bX7vMUp-T59v/view?usp=sharing), all base data will be released shortly after legal review.
+Download the HandX the base data archive from this [link]([https://drive.google.com/file/d/1Nd2eWBwSljMuImlN9T20bX7vMUp-T59v/view?usp=sharing](https://drive.google.com/file/d/16FVF_3hsl7lw81uxKaHDVb525tYUfYs3/view?usp=sharing).
 This archive contains HandX original data together with redistributed data from GigaHands, HOT3D, and HoloAssist. It **does not** include ARCTIC or H2O, which are not redistributed by HandX and must be obtained separately due to their redistribution policies.
 HandX data are stored in merged files, with `source_metadata.json` mapping each entry key to its source dataset. Please review the root [`LICENSE`](LICENSE), [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md), and applicable third-party license files under [`licenses/`](licenses/) before using or redistributing HandX data.
 
