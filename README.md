@@ -96,7 +96,7 @@ scientific research purposes. MANO parameters in the HandX dataset are derived f
 the MANO model; use of the dataset also requires compliance with the MANO license terms.
 See https://mano.is.tue.mpg.de.
 
-Download the HandX the base data archive from this [link]([https://drive.google.com/file/d/1Nd2eWBwSljMuImlN9T20bX7vMUp-T59v/view?usp=sharing](https://drive.google.com/file/d/16FVF_3hsl7lw81uxKaHDVb525tYUfYs3/view?usp=sharing).
+Download the HandX the base data archive from this [link]([https://drive.google.com/file/d/16FVF_3hsl7lw81uxKaHDVb525tYUfYs3/view?usp=sharing].
 This archive contains HandX original data together with redistributed data from GigaHands, HOT3D, and HoloAssist. It **does not** include ARCTIC or H2O, which are not redistributed by HandX and must be obtained separately due to their redistribution policies.
 HandX data are stored in merged files, with `source_metadata.json` mapping each entry key to its source dataset. Please review the root [`LICENSE`](LICENSE), [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md), and applicable third-party license files under [`licenses/`](licenses/) before using or redistributing HandX data.
 
